@@ -1,0 +1,21 @@
+{
+  "id": "iancastillo/understanding-the-challenge-and-data",
+  "id_no": 31069315,
+  "title": "Understanding the Challenge and Data",
+  "code_file": "0.0-ic-first-look-at-data.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": false,
+  "enable_gpu": false,
+  "enable_internet": true,
+  "keywords": [],
+  "dataset_sources": [
+    "datasets/iancastillo/single-rocket-league-match"
+  ],
+  "kernel_sources": [
+    "code/iancastillo/visualize-tps-oct22"
+  ],
+  "competition_sources": [
+    "competitions/tabular-playground-series-oct-2022"
+  ]
+}
