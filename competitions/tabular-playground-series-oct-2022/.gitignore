@@ -1,6 +1,9 @@
 # Command separated values
 *.csv
 
+# Compression formats
+*.ftr
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
