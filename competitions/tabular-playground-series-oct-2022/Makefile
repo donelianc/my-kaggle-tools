@@ -23,11 +23,21 @@ endif
 ## Install Python Dependencies
 requirements: test_environment
 	$(PYTHON_INTERPRETER) -m pip install -U pip setuptools wheel
+	$(PYTHON_INTERPRETER) -m pip install kaggle
 	$(PYTHON_INTERPRETER) -m pip install -r requirements.txt
 
+config_kaggle: requirements
+	kaggle config set -n competition -v tabular-playground-series-oct-2022
+	kaggle config set -n path -v ./data/raw/
+
 ## Make Dataset
-data: requirements
-	$(PYTHON_INTERPRETER) src/data/make_dataset.py data/raw data/processed
+data:
+	kaggle competitions download -c tabular-playground-series-oct-2022
+	unzip ./data/raw/competitions/tabular-playground-series-oct-2022/tabular-playground-series-oct-2022.zip -d ./data/raw/
+	rm -rf ./data/raw/competitions/
+
+single_match:
+	head -n +1521 ./data/raw/train_0.csv > ./data/interim/single_match.csv
 
 ## Delete all compiled Python files
 clean:
