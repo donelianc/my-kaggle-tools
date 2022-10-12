@@ -269,3 +269,103 @@ def draw_rocket_league_position(
     plt.title(title)
 
     return match_fig, match_ax
+
+
+def draw_rocket_league_ball(
+    data: pd.DataFrame,
+    meta: dict,
+    field: Tuple[matplotlib.figure.Figure, matplotlib.axes.SubplotBase],
+) -> Tuple[matplotlib.figure.Figure, matplotlib.axes.SubplotBase]:
+    """
+    Draws ball position in 2 dimensions for an specific 
+    game_num, event_id and event_time (optional).
+
+    Author: Sergey Saharovskiy
+    Source: https://www.kaggle.com/code/sergiosaharovskiy/tps-oct-2022-viz-players-positions-animated/notebook
+
+    :param data: pd.DataFrame with the data containing the positions of players and ball in 2 dimensions.
+    :param meta: dict with the meta position: game_num, event_id, event_time.
+    :param field: Tuple[matplotlib.figure.Figure, matplotlib.axes.SubplotBase] with matplotlib figure and axes.
+    :return: Tuple[matplotlib.figure.Figure, matplotlib.axes.SubplotBase] with matplotlib figure and axes.
+    """
+
+    game_num = meta["game_num"]
+    event_id = meta["event_id"]
+    event_time = meta["event_time"]
+
+    field_fig, field_ax = field[0], field[1]
+    match_fig, match_ax = draw_rocket_league_field(field_fig, field_ax)
+
+    ball_positions_y = "ball_pos_x"
+    ball_positions_x = "ball_pos_y"
+
+    if event_time:
+        game = data.query(
+            f"game_num == {game_num} and event_id == {event_id} and event_time == {event_time}"
+        )
+        title = f"game #{game_num} event_id {event_id} event_time {event_time:.2f}"
+    
+    else:    
+        if event_id:
+            game = data.query(f"game_num == {game_num} and event_id == {event_id}")
+            title = f"game #{game_num} event_id {event_id}"
+        
+        else:
+            if game_num:
+                game = data.query(f"game_num == {game_num}")
+                title = f"game #{game_num}"
+            
+            else:
+                game = data
+
+    x_coordinates_ball = pd.melt(
+        game,
+        # id_vars=["game_num", "event_time"],
+        value_vars=ball_positions_x,
+        var_name="ball_pos_x",
+        value_name="X",
+    )
+    y_coordinates_ball = pd.melt(
+        game,
+        # id_vars=["game_num", "event_time"],
+        value_vars=ball_positions_y,
+        var_name="ball_pos_y",
+        value_name="Y",
+    )
+    vel_coordinates_ball = pd.melt(
+        game,
+        # id_vars=["game_num", "event_time"],
+        value_vars="ball_vel_scalar",
+        var_name="velocity",
+        value_name="V",
+    )
+
+    game_ball = pd.concat([
+        x_coordinates_ball["X"], 
+        y_coordinates_ball["Y"], 
+        vel_coordinates_ball["V"]
+        ], axis=1)[
+        ["X", "Y", "V"]
+    ]
+
+    sns.scatterplot(
+        data=game_ball,
+        x="X",
+        y="Y",
+        ax=match_ax,
+        size="V",
+        sizes=(10, 50),
+        hue="V",
+        palette="coolwarm",
+        label="Avg Ball Position\n(10s before score)",
+        alpha=0.75,
+    )
+    match_ax.legend(
+        facecolor="#676C40",
+        labelcolor="white",
+        loc="upper right",
+        bbox_to_anchor=(1.2, 1.04),
+    )
+    plt.title(title)
+
+    return match_fig, match_ax
