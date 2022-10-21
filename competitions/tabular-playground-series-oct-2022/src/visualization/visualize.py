@@ -317,6 +317,7 @@ def draw_rocket_league_ball(
             
             else:
                 game = data
+                title = "All games"
 
     x_coordinates_ball = pd.melt(
         game,
@@ -341,8 +342,8 @@ def draw_rocket_league_ball(
     )
 
     game_ball = pd.concat([
-        x_coordinates_ball["X"], 
-        y_coordinates_ball["Y"], 
+        x_coordinates_ball["X"],
+        y_coordinates_ball["Y"],
         vel_coordinates_ball["V"]
         ], axis=1)[
         ["X", "Y", "V"]
