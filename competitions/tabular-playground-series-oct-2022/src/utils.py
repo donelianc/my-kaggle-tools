@@ -2,6 +2,7 @@
 
 import os
 import glob
+import string
 import pandas as pd
 import numpy as np
 
@@ -176,3 +177,37 @@ def delete_files(path: str, removal: str = "file") -> None:
         os.removedirs(path)
 
         print("Directory deleted successfully.")
+
+
+# https://www.kaggle.com/competitions/tabular-playground-series-oct-2022/discussion/360070#1987885
+def create_kf_groups(game_num: pd.Series, n_folds: int = 5):
+    
+    """
+    Author: Sergey Saharovskiy
+    
+    Creates groups for the GroupKFold based on the game_num.
+    We don't want to let train data spill over the validation set.
+    
+    Parameters
+    ----------
+    game_num : pd.Series
+        The game_num column of the dataframe.
+    n_folds : int
+        The number of folds to create.
+
+    Returns
+    -------
+    pd.Series
+        The groups for the GroupKFold.
+    """
+    
+    count_unique_games = max(game_num.unique())
+    group_size = count_unique_games // n_folds
+    
+    bins = [group_size * i for i in range(n_folds)]
+    bins += [count_unique_games]
+    
+    labels = [letter for letter in string.ascii_letters[:n_folds]]
+    kf_groups = pd.cut(game_num, bins=bins, labels=labels)
+    
+    return kf_groups
