@@ -2,7 +2,7 @@
 # data paths
 paths:
   dtypes: './data/raw/test_dtypes.csv'
-  data: './data/interim/sample_5perc_train_compressed.ftr'
+  data: './data/interim/sample_10perc_train_compressed.ftr'
 
 data: 
   index: ['game_num', 'event_id', 'event_time']
