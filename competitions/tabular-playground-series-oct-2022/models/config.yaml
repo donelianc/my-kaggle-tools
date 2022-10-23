@@ -21,3 +21,20 @@ model:
   params:
     objective: 'binary'
     metric: 'neg_log_loss'
+  features:
+    player:
+      - 'demolished'
+      - 'position'
+      - 'velocity'
+      - 'speed'
+    ball:
+      - 'position'
+      - 'velocity'
+      - 'speed'
+      - 'distance_to_goal_posts'
+    booster:
+      - 'booster'
+    timer:
+      - 'timer'
+    team:
+      - 'centroid'
