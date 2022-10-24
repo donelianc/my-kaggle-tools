@@ -38,3 +38,7 @@ model:
       - 'timer'
     team:
       - 'centroid'
+  ipca:
+    n_components: 37
+    batch_size: "auto"
+    whiten: False
