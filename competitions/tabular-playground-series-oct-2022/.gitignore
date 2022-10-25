@@ -1,3 +1,6 @@
+# Models
+*.joblib
+
 # Command separated values
 *.csv
 
