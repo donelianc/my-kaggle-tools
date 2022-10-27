@@ -302,8 +302,8 @@ class TeamCentroid(BaseEstimator, TransformerMixin):
                     X_copy.columns.str.contains(r"p[3-5]_pos_y")
                 ]
 
-            X_copy[f"team_{team}_centroid_x"] = X_copy[xpositions].mean(axis=1)
-            X_copy[f"team_{team}_centroid_y"] = X_copy[ypositions].mean(axis=1)
+            X_copy[f"team_{team}_centroid_x"] = X_copy[xpositions].fillna(0).mean(axis=1)
+            X_copy[f"team_{team}_centroid_y"] = X_copy[ypositions].fillna(0).mean(axis=1)
 
         return X_copy[self.feature_names_out]
 

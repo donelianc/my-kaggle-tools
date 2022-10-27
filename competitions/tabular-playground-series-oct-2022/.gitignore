@@ -1,5 +1,6 @@
 # Models
 *.joblib
+*.pkl
 
 # Command separated values
 *.csv
