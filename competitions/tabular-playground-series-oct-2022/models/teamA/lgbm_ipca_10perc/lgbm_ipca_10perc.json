@@ -1,0 +1,1 @@
+"{\"learning_rate\": 0.10406783475284266, \"n_estimators\": \"2500\", \"max_depth\": \"80\", \"num_leaves\": \"1500\", \"subsample\": 0.546094776086536, \"colsample_bytree\": 1.0, \"min_data_in_leaf\": \"350\", \"scale_pos_weight\": 5.0, \"min_child_weight\": 0.25}"
