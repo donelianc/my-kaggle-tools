@@ -1,5 +1,6 @@
 """Feature engineering and feature creation."""
 
+from itertools import combinations
 from pandas.core.frame import DataFrame
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -235,6 +236,136 @@ class PlayerSpeed(BaseEstimator, TransformerMixin):
 
         return X_copy[self.feature_names_out]
 
+
+class PlayerDistanceToTeam(BaseEstimator, TransformerMixin):
+    """Create a feature that indicates the distance between the players and the team."""
+
+    def __init__(self):
+        self.feature_names_out = None
+        self._n_features_out = 6
+        self.team_A_combs = None
+        self.team_B_combs = None
+        self.team_A_distance = None
+        self.team_B_distance = None
+
+    def fit(self, X, y=None):
+        """
+        Fit the transformer on data
+        """
+        
+        self.team_A_combs = list(combinations(list(range(3)), 2))
+        self.team_B_combs = list(combinations(list(range(3, 6)), 2))
+        
+        self.team_A_distances = [f"p{comb[0]}_dist_from_p{comb[1]}" for comb in self.team_A_combs]
+        self.team_B_distances = [f"p{comb[0]}_dist_from_p{comb[1]}" for comb in self.team_B_combs]
+
+        self.feature_names_out = self.team_A_distances + self.team_B_distances
+        return self
+
+    def transform(self, X):
+        """
+        Transform the X. This method is called by the pipeline.
+        Calculate the speed of the players.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            The data to transform
+
+        Returns
+        -------
+        pandas.DataFrame
+            The transformed data
+        """
+        X_copy = X.fillna(0).copy()
+
+        for i, comb in enumerate(self.team_A_combs):
+            X_copy[self.team_A_distances[i]] = (
+                X_copy[f"p{comb[0]}_pos_x"].sub(X_copy[f"p{comb[1]}_pos_x"]).pow(2)
+                + X_copy[f"p{comb[0]}_pos_y"].sub(X_copy[f"p{comb[1]}_pos_y"]).pow(2)
+                + X_copy[f"p{comb[0]}_pos_z"].sub(X_copy[f"p{comb[1]}_pos_z"]).pow(2)
+                ).pow(0.5)
+
+        for i, comb in enumerate(self.team_B_combs):
+            X_copy[self.team_B_distances[i]] = (
+                X_copy[f"p{comb[0]}_pos_x"].sub(X_copy[f"p{comb[1]}_pos_x"]).pow(2)
+                + X_copy[f"p{comb[0]}_pos_y"].sub(X_copy[f"p{comb[1]}_pos_y"]).pow(2)
+                + X_copy[f"p{comb[0]}_pos_z"].sub(X_copy[f"p{comb[1]}_pos_z"]).pow(2)
+                ).pow(0.5)
+
+        return X_copy[self.feature_names_out]
+
+
+    def get_feature_names_out(self, input_features=None):
+        """Get output feature names for transformation.
+
+        Parameters
+        ----------
+        input_features : array-like of str or None, default=None
+            Only used to validate feature names with the names seen in :meth:`fit`.
+
+        Returns
+        -------
+        feature_names_out : ndarray of str objects
+            Transformed feature names.
+        """
+        check_is_fitted(self, "_n_features_out")
+        return _generate_get_feature_names_out(
+            self, self._n_features_out, input_features=input_features
+        )
+
+
+class PlayerDistanceToOrbs(BaseEstimator, TransformerMixin):
+    """Create a feature that indicates the distance between the players and the team."""
+
+    def __init__(self):
+        self.feature_names_out = None
+        self._n_features_out = 36
+        self.orbs_positions = [ 
+            (-61.4, -81.9, 0.0),
+            (61.4, -81.9, 0.0),
+            (-71.7, 0, 0.0),
+            (71.7, 0, 0.0),
+            (-61.4, 81.9, 0.0),
+            (61.4, 81.9, 0.0),
+            ]
+
+    def fit(self, X, y=None):
+        """
+        Fit the transformer on data
+        """
+        
+        self.feature_names_out = [f"p{i}_dist_from_orb{j}" for i in range(6) for j in range(6)]
+        return self
+
+    def transform(self, X):
+        """
+        Transform the X. This method is called by the pipeline.
+        Calculate the speed of the players.
+
+        Parameters
+        ----------
+        data : pandas.DataFrame
+            The data to transform
+
+        Returns
+        -------
+        pandas.DataFrame
+            The transformed data
+        """
+        X_copy = X.fillna(0).copy()
+
+        for i in range(6):
+            for j, orb_pos in enumerate(self.orbs_positions):
+                X_copy[f"p{i}_dist_from_orb{j}"] = (
+                    X_copy[f"p{i}_pos_x"].sub(orb_pos[0]).pow(2)
+                    + X_copy[f"p{i}_pos_y"].sub(orb_pos[1]).pow(2)
+                    + X_copy[f"p{i}_pos_z"].sub(orb_pos[2]).pow(2)
+                    ).pow(0.5)
+
+        return X_copy[self.feature_names_out]
+
+
     def get_feature_names_out(self, input_features=None):
         """Get output feature names for transformation.
 
@@ -259,7 +390,7 @@ class TeamCentroid(BaseEstimator, TransformerMixin):
 
     def __init__(self):
         self.feature_names_out = None
-        self._n_features_out = 2
+        self._n_features_out = 4
 
     def fit(self, X, y=None):
         """
