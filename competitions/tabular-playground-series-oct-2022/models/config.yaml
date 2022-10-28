@@ -42,6 +42,6 @@ model:
     team:
       - 'centroid'
   ipca:
-    n_components: 37
+    n_components: 20
     batch_size: "auto"
     whiten: False
