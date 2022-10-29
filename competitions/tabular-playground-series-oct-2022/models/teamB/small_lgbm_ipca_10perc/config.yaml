@@ -1,0 +1,47 @@
+---
+# data paths
+paths:
+  test_dtypes: './data/raw/test_dtypes.csv'
+  train_dtypes: './data/raw/train_dtypes.csv'
+  data: './data/interim/sample_10perc_train_compressed.ftr'
+
+data: 
+  index: ['game_num', 'event_id', 'event_time']
+  # Check Mahdee's discussion for more details about goal posts
+  # Source: https://www.kaggle.com/competitions/tabular-playground-series-oct-2022/discussion/357633
+  goal_post1: [0.0, -100.0, 6.8]
+  goal_post2: [0.0, 100.0, 6.8]
+
+# model parameters
+model:
+  # team name
+  team: 'B'
+  # model type
+  type: 'lgbm'
+  # model parameters
+  params:
+    objective: 'binary'
+    metric: 'neg_log_loss'
+  features:
+    player:
+      - 'demolished'
+      - 'position'
+      - 'velocity'
+      - 'speed'
+      - 'distance_to_team'
+      - 'distance_to_orbs'
+    ball:
+      - 'position'
+      - 'velocity'
+      - 'speed'
+      - 'distance_to_goal_posts'
+    booster:
+      - 'booster'
+    timer:
+      - 'timer'
+    team:
+      - 'centroid'
+  ipca:
+    n_components: 20
+    batch_size: "auto"
+    whiten: False
