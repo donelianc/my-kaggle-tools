@@ -3,7 +3,7 @@
 paths:
   test_dtypes: './data/raw/test_dtypes.csv'
   train_dtypes: './data/raw/train_dtypes.csv'
-  data: './data/interim/sample_10perc_train_compressed.ftr'
+  data: './data/interim/sample_100perc_train_compressed.ftr'
 
 data: 
   index: ['game_num', 'event_id', 'event_time']

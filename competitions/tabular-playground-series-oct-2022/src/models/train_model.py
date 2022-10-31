@@ -46,9 +46,9 @@ class BaseModel:
 
         self.data = read_feather("../" + self.config["paths"]["data"])
 
-        # dtypes_df = read_csv("../" + self.config["paths"]["train_dtypes"])
-        # dtypes = {k: v for (k, v) in zip(dtypes_df.column, dtypes_df.dtype)}
-        # self.data = self.data.astype(dtypes)
+        dtypes_df = read_csv("../" + self.config["paths"]["train_dtypes"])
+        dtypes = {k: v for (k, v) in zip(dtypes_df.column, dtypes_df.dtype)}
+        self.data = self.data.astype(dtypes)
 
         self.data.set_index(self.config["data"]["index"], inplace=True)
 
@@ -229,7 +229,8 @@ class BaseModel:
                         steps=[
                             (
                                 "timer",
-                                FunctionTransformer(abs, feature_names_out="one-to-one"),
+                                FunctionTransformer(abs),
+                                # FunctionTransformer(abs, feature_names_out="one-to-one"),
                             ),
                             ("scaler", MaxAbsScaler()),
                         ]

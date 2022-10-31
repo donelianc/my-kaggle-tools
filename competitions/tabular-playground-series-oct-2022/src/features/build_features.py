@@ -1,11 +1,12 @@
 """Feature engineering and feature creation."""
 
 from itertools import combinations
+from numpy import asarray
 from pandas.core.frame import DataFrame
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from sklearn.utils.validation import check_is_fitted
-from sklearn.utils.validation import _generate_get_feature_names_out
+# from sklearn.utils.validation import _generate_get_feature_names_out
 
 
 class PlayerDemolished(BaseEstimator, TransformerMixin):
@@ -74,8 +75,9 @@ class PlayerDemolished(BaseEstimator, TransformerMixin):
             Transformed feature names.
         """
         check_is_fitted(self, "_n_features_out")
-        return _generate_get_feature_names_out(
-            self, self._n_features_out, input_features=input_features
+        estimator_name = self.__class__.__name__.lower()
+        return asarray(
+            [f"{estimator_name}{i}" for i in range(self._n_features_out)], dtype=object
         )
 
 
@@ -150,8 +152,9 @@ class DistanceBallGoalPosts(BaseEstimator, TransformerMixin):
             Transformed feature names.
         """
         check_is_fitted(self, "_n_features_out")
-        return _generate_get_feature_names_out(
-            self, self._n_features_out, input_features=input_features
+        estimator_name = self.__class__.__name__.lower()
+        return asarray(
+            [f"{estimator_name}{i}" for i in range(self._n_features_out)], dtype=object
         )
 
 
@@ -194,8 +197,9 @@ class BallSpeed(BaseEstimator, TransformerMixin):
             Transformed feature names.
         """
         check_is_fitted(self, "_n_features_out")
-        return _generate_get_feature_names_out(
-            self, self._n_features_out, input_features=input_features
+        estimator_name = self.__class__.__name__.lower()
+        return asarray(
+            [f"{estimator_name}{i}" for i in range(self._n_features_out)], dtype=object
         )
 
 
@@ -235,6 +239,25 @@ class PlayerSpeed(BaseEstimator, TransformerMixin):
             X_copy[self.feature_names_out[i]] = X_copy[velocity_vector].pow(2).sum(axis=1).pow(0.5)
 
         return X_copy[self.feature_names_out]
+
+    def get_feature_names_out(self, input_features=None):
+        """Get output feature names for transformation.
+
+        Parameters
+        ----------
+        input_features : array-like of str or None, default=None
+            Only used to validate feature names with the names seen in :meth:`fit`.
+
+        Returns
+        -------
+        feature_names_out : ndarray of str objects
+            Transformed feature names.
+        """
+        check_is_fitted(self, "_n_features_out")
+        estimator_name = self.__class__.__name__.lower()
+        return asarray(
+            [f"{estimator_name}{i}" for i in range(self._n_features_out)], dtype=object
+        )
 
 
 class PlayerDistanceToTeam(BaseEstimator, TransformerMixin):
@@ -310,8 +333,9 @@ class PlayerDistanceToTeam(BaseEstimator, TransformerMixin):
             Transformed feature names.
         """
         check_is_fitted(self, "_n_features_out")
-        return _generate_get_feature_names_out(
-            self, self._n_features_out, input_features=input_features
+        estimator_name = self.__class__.__name__.lower()
+        return asarray(
+            [f"{estimator_name}{i}" for i in range(self._n_features_out)], dtype=object
         )
 
 
@@ -380,8 +404,9 @@ class PlayerDistanceToOrbs(BaseEstimator, TransformerMixin):
             Transformed feature names.
         """
         check_is_fitted(self, "_n_features_out")
-        return _generate_get_feature_names_out(
-            self, self._n_features_out, input_features=input_features
+        estimator_name = self.__class__.__name__.lower()
+        return asarray(
+            [f"{estimator_name}{i}" for i in range(self._n_features_out)], dtype=object
         )
 
 
@@ -452,6 +477,7 @@ class TeamCentroid(BaseEstimator, TransformerMixin):
             Transformed feature names.
         """
         check_is_fitted(self, "_n_features_out")
-        return _generate_get_feature_names_out(
-            self, self._n_features_out, input_features=input_features
+        estimator_name = self.__class__.__name__.lower()
+        return asarray(
+            [f"{estimator_name}{i}" for i in range(self._n_features_out)], dtype=object
         )

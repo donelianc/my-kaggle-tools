@@ -33,7 +33,7 @@ config_kaggle: requirements
 ## Make Dataset
 data:
 	kaggle competitions download -c tabular-playground-series-oct-2022
-	unzip ./data/raw/competitions/tabular-playground-series-oct-2022/tabular-playground-series-oct-2022.zip -d ./data/raw/
+	unzip ./data/raw/tabular-playground-series-oct-2022.zip -d ./data/raw/
 	rm -rf ./data/raw/competitions/
 
 single_match:
