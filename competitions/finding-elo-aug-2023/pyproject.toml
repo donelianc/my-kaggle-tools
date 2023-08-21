@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "finding-elo"
+version = "0.1.0"
+description = "TBD"
+authors = ["Ian Castillo <ian.castillx@gmail.com>"]
+readme = "README.md"
+packages = [{include = "finding_elo"}]
+
+[tool.poetry.dependencies]
+python = "^3.9.15"
+chess = "^1.10.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
