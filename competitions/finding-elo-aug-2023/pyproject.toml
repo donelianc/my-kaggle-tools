@@ -1,14 +1,14 @@
 [tool.poetry]
 name = "finding-elo"
 version = "0.1.0"
-description = "TBD"
+description = "Predict chess player's ELO rating using only piece moves from a single game."
 authors = ["Ian Castillo <ian.castillx@gmail.com>"]
 readme = "README.md"
-packages = [{include = "finding_elo"}]
 
 [tool.poetry.dependencies]
-python = "^3.9.15"
+python = "3.10.7"
 chess = "^1.10.0"
+ipykernel = "^6.25.1"
 
 
 [build-system]
