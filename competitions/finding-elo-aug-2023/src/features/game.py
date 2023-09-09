@@ -1,35 +1,3 @@
-def get_checks(game):
-    """Count checks performed by each player"""
-
-    # Initialize counters
-    wp_checks = 0
-    bp_checks = 0
-
-    # Iterate through moves
-    board = game.board()
-    for move in game.mainline_moves():
-        # Make move and continue
-        board.push(move)
-
-        # Check if move is a check
-        if board.is_check():
-            if board.turn:
-                wp_checks += 1
-            else:
-                bp_checks += 1
-
-    return {"wp_checks": wp_checks, "bp_checks": bp_checks}
-
-
-# Functions to extract key data from each game
-def get_player_ratings(game):
-    """Get player Elo ratings from PGN headers"""
-    white_rating = game.headers["WhiteElo"]
-    black_rating = game.headers["BlackElo"]
-
-    return {"wp_rating": white_rating, "bp_rating": black_rating}
-
-
 def get_game_info(game):
     # Get total moves from perspective of white
     total_moves = len(list(game.mainline_moves()))
@@ -63,8 +31,8 @@ def get_game_info(game):
     return {
         "result": result,
         "total_moves": total_moves,
-        "wp_moves": white_moves,
-        "bp_moves": black_moves,
+        "wp_total_moves": white_moves,
+        "bp_total_moves": black_moves,
     }
 
 
@@ -89,10 +57,33 @@ def get_piece_moves(game):
     # Build columns for dataframe
     df_moves = {}
     for col in cols:
-        df_moves[f"wp_{col}"] = wp_moves[col]
-        df_moves[f"bp_{col}"] = bp_moves[col]
+        df_moves[f"wp_total_{col}_moves"] = wp_moves[col]
+        df_moves[f"bp_total_{col}_moves"] = bp_moves[col]
 
     return df_moves
+
+
+def get_checks(game):
+    """Count checks performed by each player"""
+
+    # Initialize counters
+    wp_checks = 0
+    bp_checks = 0
+
+    # Iterate through moves
+    board = game.board()
+    for move in game.mainline_moves():
+        # Make move and continue
+        board.push(move)
+
+        # Check if move is a check
+        if board.is_check():
+            if board.turn:
+                wp_checks += 1
+            else:
+                bp_checks += 1
+
+    return {"wp_total_checks": wp_checks, "bp_total_checks": bp_checks}
 
 
 def get_captures(game):
@@ -112,4 +103,4 @@ def get_captures(game):
 
         board.push(move)
 
-    return {"wp_captures": wp_captures, "bp_captures": bp_captures}
+    return {"wp_total_captures": wp_captures, "bp_total_captures": bp_captures}

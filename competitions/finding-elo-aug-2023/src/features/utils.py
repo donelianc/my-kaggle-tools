@@ -5,7 +5,6 @@ from src.features.game import (
     get_piece_moves,
     get_checks,
     get_captures,
-    get_player_ratings,
 )
 
 
@@ -31,13 +30,29 @@ def pgn_to_dataframe(pgn_file):
         # Compile game data
         games.append(
             {
+                **player_ratings,
                 **game_info,
                 **piece_moves,
                 **check_counts,
                 **capture_counts,
-                **player_ratings,
             }
         )
 
     # Build DataFrame
-    return pd.DataFrame(games)
+    df = pd.DataFrame(games)
+    df.insert(
+        loc=0,
+        column="rating_diff",
+        value=df["wp_rating"].astype(int) - df["bp_rating"].astype(int),
+    )
+
+    return df
+
+
+# Functions to extract key data from each game
+def get_player_ratings(game):
+    """Get player Elo ratings from PGN headers"""
+    white_rating = game.headers["WhiteElo"]
+    black_rating = game.headers["BlackElo"]
+
+    return {"wp_rating": white_rating, "bp_rating": black_rating}
