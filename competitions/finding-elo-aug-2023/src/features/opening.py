@@ -24,10 +24,20 @@ def get_opening_name(fen, database="lichess", until="2012", sleep_time=5):
     response.raise_for_status()
 
     # Parse the JSON response
-    data = response.json()
+    try:
+        data = response.json()
+        # Ensure the data is a dictionary
+        if not isinstance(data, dict):
+            raise ValueError("Unexpected response format from API")
+    except ValueError as e:
+        print(f"Error parsing JSON: {e}")
+        data = {}
 
     # Extract the opening name
-    name = data.get("opening", {}).get("name")
+    name = None
+    if "opening" in data.keys():
+        if data["opening"] is not None:
+            name = data["opening"].get("name")
 
     return name, data
 
@@ -54,7 +64,7 @@ def get_opening_features(game):
         opening, data = (
             (None, {"moves": [None]})
             if i == 0
-            else get_opening_name(fen=fen, database="master", sleep_time=1)
+            else get_opening_name(fen=fen, database="master", sleep_time=2)
         )
 
         if opening:
@@ -66,7 +76,10 @@ def get_opening_features(game):
             break
 
         opening_last_known_move = i
-        opening_novelty_piece = board.piece_at(move.from_square).symbol().upper()
+
+        opening_novelty_piece = board.piece_at(move.from_square)
+        opening_novelty_piece = opening_novelty_piece.symbol().upper()
+
         opening_novelty_square = chess.square_name(move.to_square)
         opening_novelty_move = board.san(move)
         opening_novelty_player = fen.split(" ")[1] + "p"

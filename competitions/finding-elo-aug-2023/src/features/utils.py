@@ -6,6 +6,7 @@ from src.features.game import (
     get_checks,
     get_captures,
 )
+from src.features.opening import get_opening_features
 
 
 def pgn_to_dataframe(pgn_file):
@@ -26,6 +27,7 @@ def pgn_to_dataframe(pgn_file):
         check_counts = get_checks(game)
         capture_counts = get_captures(game)
         player_ratings = get_player_ratings(game)
+        opening_features = get_opening_features(game)
 
         # Compile game data
         games.append(
@@ -35,6 +37,7 @@ def pgn_to_dataframe(pgn_file):
                 **piece_moves,
                 **check_counts,
                 **capture_counts,
+                **opening_features,
             }
         )
 
