@@ -83,7 +83,9 @@ def get_checks(game):
             else:
                 bp_checks += 1
 
-    return {"wp_total_checks": wp_checks, "bp_total_checks": bp_checks}
+    # checks are mixed on purpose becase
+    # the way how .turn and .is_check() works
+    return {"wp_total_checks": bp_checks, "bp_total_checks": wp_checks}
 
 
 def get_captures(game):
@@ -104,3 +106,53 @@ def get_captures(game):
         board.push(move)
 
     return {"wp_total_captures": wp_captures, "bp_total_captures": bp_captures}
+
+
+def get_promorions(game):
+    """Count number of promotions by each player"""
+
+    # Initialize counters
+    wp_promotions = 0
+    bp_promotions = 0
+
+    # Iterate through moves
+    board = game.board()
+    for move in game.mainline_moves():
+        # Check if promotion occurred
+        if move.promotion is not None:
+            if board.turn:
+                wp_promotions += 1
+            else:
+                bp_promotions += 1
+
+        board.push(move)
+
+    return {
+        "wp_total_promotions": wp_promotions,
+        "bp_total_promotions": bp_promotions,
+    }
+
+
+def get_castling(game):
+    """Count number of castling moves by each player"""
+
+    # Initialize counters
+    wp_castles = False
+    bp_castles = False
+
+    # Iterate through moves
+    board = game.board()
+    for move in game.mainline_moves():
+        # Check if castling occurred
+        if move in board.generate_castling_moves():
+            if board.turn:
+                wp_castles = True
+            else:
+                bp_castles = True
+
+        board.push(move)
+
+    return {
+        "wp_bool_castles": wp_castles,
+        "bp_bool_castles": bp_castles,
+    }
