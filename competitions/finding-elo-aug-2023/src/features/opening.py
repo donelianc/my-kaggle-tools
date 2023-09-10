@@ -51,13 +51,16 @@ def get_opening_features(game):
     total_moves = len(main_moves)
 
     # Initial states
-    opening_name, opening_last_move, opening_last_known_move = None, None, None
     (
+        opening_name,
+        opening_last_move,
+        opening_last_known_move,
+        opening_moves_after_novelty,
         opening_novelty_player,
         opening_novelty_piece,
         opening_novelty_square,
         opening_novelty_move,
-    ) = (None, None, None, None)
+    ) = (None, None, None, None, None, None, None, None)
 
     for i, move in enumerate(main_moves):
         fen = board.fen()
@@ -72,7 +75,16 @@ def get_opening_features(game):
             opening_last_move = i
 
         # If no moves in data or we're at the last move
-        if not data["moves"] or i == total_moves - 1:
+        if not data["moves"]:
+            break
+        elif i == total_moves - 1:
+            opening_moves_after_novelty = 0
+            (
+                opening_novelty_player,
+                opening_novelty_piece,
+                opening_novelty_square,
+                opening_novelty_move,
+            ) = (None, None, None, None)
             break
 
         opening_last_known_move = i
@@ -84,12 +96,15 @@ def get_opening_features(game):
         opening_novelty_move = board.san(move)
         opening_novelty_player = fen.split(" ")[1] + "p"
 
+        opening_moves_after_novelty = total_moves - opening_last_known_move
+
         board.push(move)
 
     return {
         "opening_name": opening_name,
         "opening_last_move": opening_last_move,
         "opening_last_known_move": opening_last_known_move,
+        "opening_moves_after_novelty": opening_moves_after_novelty,
         "opening_novelty_player": opening_novelty_player,
         "opening_novelty_piece": opening_novelty_piece,
         "opening_novelty_square": opening_novelty_square,
