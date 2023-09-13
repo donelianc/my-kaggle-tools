@@ -1,15 +1,15 @@
 import pandas as pd
 from chess.pgn import read_game
 from src.features.game import (
+    get_captures,
+    get_castling,
+    get_checks,
     get_game_info,
     get_piece_moves,
-    get_checks,
-    get_captures,
     get_promorions,
-    get_castling,
 )
+from src.features.opening import get_opening_features
 from src.features.players import get_player_ratings
-# from src.features.opening import get_opening_features
 
 
 def pgn_to_dataframe(pgn_file):
@@ -32,8 +32,7 @@ def pgn_to_dataframe(pgn_file):
         capture_counts = get_captures(game)
         promotion_counts = get_promorions(game)
         castling_counts = get_castling(game)
-
-        # opening_features = get_opening_features(game)
+        opening_features = get_opening_features(game)
 
         # Compile game data
         games.append(
@@ -45,7 +44,7 @@ def pgn_to_dataframe(pgn_file):
                 **capture_counts,
                 **promotion_counts,
                 **castling_counts,
-                # **opening_features,
+                **opening_features,
             }
         )
 

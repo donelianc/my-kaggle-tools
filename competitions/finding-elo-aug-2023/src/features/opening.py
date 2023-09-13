@@ -1,6 +1,7 @@
-import requests
-import chess
 from time import sleep
+
+import chess
+import requests
 
 # Define the base URL as a constant
 BASE_URL = "https://explorer.lichess.ovh/{database}"
