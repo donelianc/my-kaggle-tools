@@ -15,55 +15,11 @@ from src.features.utils import count_games_in_pgn
 from tqdm import tqdm
 
 
-def pgn_to_dataframe(pgn_file):
-    games = []
-
-    # Load PGN
-    pgn = open(pgn_file)
-
-    # Iterate over games
-    while True:
-        game = read_game(pgn)
-        if game is None:
-            break
-
-        # Extract info
-        player_ratings = get_player_ratings(game)
-        game_info = get_game_info(game)
-        piece_moves = get_piece_moves(game)
-        check_counts = get_checks(game)
-        capture_counts = get_captures(game)
-        promotion_counts = get_promorions(game)
-        castling_counts = get_castling(game)
-        opening_features = get_opening_features(game)
-
-        # Compile game data
-        games.append(
-            {
-                **player_ratings,
-                **game_info,
-                **piece_moves,
-                **check_counts,
-                **capture_counts,
-                **promotion_counts,
-                **castling_counts,
-                **opening_features,
-            }
-        )
-
-    # Build DataFrame
-    df = pd.DataFrame(games)
-    df.insert(
-        loc=0,
-        column="rating_diff",
-        value=df["wp_rating"].astype(int) - df["bp_rating"].astype(int),
-    )
-
-    return df
-
-
-def new_pgn_to_dataframe(
-    pgn_file, save_interval=100, save_location="./data/interim/output.csv"
+def pgn_to_dataframe(
+    pgn_file: str,
+    save_interval: int = 100,
+    save_location: str = "./data/interim/output.csv",
+    include_opening_cols: bool = True,
 ):
     games = []
 
@@ -104,21 +60,23 @@ def new_pgn_to_dataframe(
         capture_counts = get_captures(game)
         promotion_counts = get_promorions(game)
         castling_counts = get_castling(game)
-        opening_features = get_opening_features(game)
 
-        # Compile game data
-        games.append(
-            {
-                **player_ratings,
-                **game_info,
-                **piece_moves,
-                **check_counts,
-                **capture_counts,
-                **promotion_counts,
-                **castling_counts,
-                **opening_features,
-            }
-        )
+        game_data = {
+            **player_ratings,
+            **game_info,
+            **piece_moves,
+            **check_counts,
+            **capture_counts,
+            **promotion_counts,
+            **castling_counts,
+        }
+
+        # Append opening features only if include_opening_features is True
+        if include_opening_cols:
+            opening_features = get_opening_features(game)
+            game_data = {**game_data, **opening_features}
+
+        games.append(game_data)
 
         # Save to CSV every N games or if it's the last game
         if (game_idx + 1) % save_interval == 0 or game_idx == total_games - 1:
@@ -131,4 +89,4 @@ def new_pgn_to_dataframe(
             # Clear the games list to free up memory
             games.clear()
 
-    return pd.read_csv(save_location)  # Return the final dataframe
+    return pd.read_csv(save_location)
