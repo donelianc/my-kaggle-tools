@@ -1,32 +1,26 @@
-def get_game_info(game):
-    # Get total moves from perspective of white
+from typing import Dict
+
+from chess.pgn import Game
+
+
+def get_game_info(game: Game) -> Dict[str, str | int]:
+    """
+    Extracts general information from a game, such as the total number of moves,
+    the result, and the total moves by each player.
+
+    :param game: A chess game object.
+    :return: A dictionary containing the extracted information.
+    """
     total_moves = len(list(game.mainline_moves()))
-
-    # Initialize variables
-    white_moves = None
-    black_moves = None
-    white_won = None
-
-    # Determine outcome
     result = game.headers["Result"]
+    white_won = None
     if result == "1-0":
         white_won = True
     elif result == "0-1":
         white_won = False
 
-    # Calculate white moves
     white_moves = (total_moves // 2) + (total_moves % 2)
-
-    # Calculate black moves based on parity and outcome
-    if white_won is None:
-        if total_moves % 2 != 0:
-            black_moves = white_moves - 1
-        else:
-            black_moves = white_moves
-    elif white_won:
-        black_moves = white_moves - 1
-    else:
-        black_moves = white_moves
+    black_moves = white_moves if white_won is None else white_moves - int(white_won)
 
     return {
         "result": result,
@@ -36,123 +30,108 @@ def get_game_info(game):
     }
 
 
-def get_piece_moves(game):
-    """Track number of moves by piece type and player"""
+def get_piece_moves(game: Game) -> Dict[str, int]:
+    """
+    Tracks the number of moves by piece type and player.
 
-    # Initialize count for each piece
+    :param game: A chess game object.
+    :return: A dictionary containing the total moves by each piece for white
+    and black players.
+    """
     cols = ["P", "N", "B", "R", "Q", "K"]
     wp_moves = {col: 0 for col in cols}
     bp_moves = {col: 0 for col in cols}
-
-    # Tally moves by piece based on turn
     board = game.board()
+
     for move in game.mainline_moves():
-        piece = board.piece_at(move.from_square).symbol().upper()
-        if board.turn:
-            wp_moves[piece] += 1
-        else:
-            bp_moves[piece] += 1
-        board.push(move)
-
-    # Build columns for dataframe
-    df_moves = {}
-    for col in cols:
-        df_moves[f"wp_total_{col}_moves"] = wp_moves[col]
-        df_moves[f"bp_total_{col}_moves"] = bp_moves[col]
-
-    return df_moves
-
-
-def get_checks(game):
-    """Count checks performed by each player"""
-
-    # Initialize counters
-    wp_checks = 0
-    bp_checks = 0
-
-    # Iterate through moves
-    board = game.board()
-    for move in game.mainline_moves():
-        # Make move and continue
-        board.push(move)
-
-        # Check if move is a check
-        if board.is_check():
+        piece_entity = board.piece_at(move.from_square)
+        if piece_entity:  # Check to ensure a piece exists at the square
+            piece = piece_entity.symbol().upper()
             if board.turn:
-                wp_checks += 1
+                wp_moves[piece] += 1
             else:
-                bp_checks += 1
+                bp_moves[piece] += 1
+        board.push(move)
 
-    # checks are mixed on purpose becase
-    # the way how .turn and .is_check() works
+    return {f"wp_total_{col}_moves": wp_moves[col] for col in cols} | {
+        f"bp_total_{col}_moves": bp_moves[col] for col in cols
+    }
+
+
+def get_checks(game: Game) -> Dict[str, int]:
+    """
+    Counts the number of checks performed by each player.
+
+    :param game: A chess game object.
+    :return: A dictionary containing the total number of checks by white
+    and black players.
+    """
+    wp_checks = bp_checks = 0
+    board = game.board()
+
+    for move in game.mainline_moves():
+        board.push(move)
+        if board.is_check():
+            wp_checks += board.turn
+            bp_checks += not board.turn
+
     return {"wp_total_checks": bp_checks, "bp_total_checks": wp_checks}
 
 
-def get_captures(game):
-    # Initialize counters
-    wp_captures = 0
-    bp_captures = 0
+def get_captures(game: Game) -> Dict[str, int]:
+    """
+    Counts the number of captures made by each player.
 
-    # Iterate through moves
+    :param game: A chess game object.
+    :return: A dictionary containing the total number of captures by
+    white and black players.
+    """
+    wp_captures = bp_captures = 0
     board = game.board()
-    for move in game.mainline_moves():
-        # Check if capture occurred
-        if board.is_capture(move):
-            if board.turn:
-                wp_captures += 1
-            else:
-                bp_captures += 1
 
+    for move in game.mainline_moves():
+        if board.is_capture(move):
+            wp_captures += board.turn
+            bp_captures += not board.turn
         board.push(move)
 
     return {"wp_total_captures": wp_captures, "bp_total_captures": bp_captures}
 
 
-def get_promotions(game):
-    """Count number of promotions by each player"""
+def get_promotions(game: Game) -> Dict[str, int]:
+    """
+    Counts the number of promotions made by each player.
 
-    # Initialize counters
-    wp_promotions = 0
-    bp_promotions = 0
-
-    # Iterate through moves
+    :param game: A chess game object.
+    :return: A dictionary containing the total number of promotions by
+    white and black players.
+    """
+    wp_promotions = bp_promotions = 0
     board = game.board()
+
     for move in game.mainline_moves():
-        # Check if promotion occurred
         if move.promotion is not None:
-            if board.turn:
-                wp_promotions += 1
-            else:
-                bp_promotions += 1
-
+            wp_promotions += board.turn
+            bp_promotions += not board.turn
         board.push(move)
 
-    return {
-        "wp_total_promotions": wp_promotions,
-        "bp_total_promotions": bp_promotions,
-    }
+    return {"wp_total_promotions": wp_promotions, "bp_total_promotions": bp_promotions}
 
 
-def get_castling(game):
-    """Count number of castling moves by each player"""
+def get_castling(game: Game) -> Dict[str, bool]:
+    """
+    Identifies if castling occurred by each player.
 
-    # Initialize counters
-    wp_castles = False
-    bp_castles = False
-
-    # Iterate through moves
+    :param game: A chess game object.
+    :return: A dictionary indicating whether white and black players castled.
+    """
+    wp_castles = bp_castles = False
     board = game.board()
-    for move in game.mainline_moves():
-        # Check if castling occurred
-        if move in board.generate_castling_moves():
-            if board.turn:
-                wp_castles = True
-            else:
-                bp_castles = True
 
+    for move in game.mainline_moves():
+        if move in board.generate_castling_moves():
+            wp_castles |= board.turn
+            bp_castles |= not board.turn
         board.push(move)
 
-    return {
-        "wp_bool_castles": wp_castles,
-        "bp_bool_castles": bp_castles,
-    }
+    return {"wp_bool_castles": wp_castles, "bp_bool_castles": bp_castles}
