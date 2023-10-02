@@ -108,7 +108,7 @@ def get_captures(game):
     return {"wp_total_captures": wp_captures, "bp_total_captures": bp_captures}
 
 
-def get_promorions(game):
+def get_promotions(game):
     """Count number of promotions by each player"""
 
     # Initialize counters

@@ -1,13 +1,16 @@
+import gc
 import os
+from typing import Dict, List, Optional, Union
+
 import pandas as pd
-from chess.pgn import read_game
+from chess.pgn import Game, read_game
 from src.features.game import (
     get_captures,
     get_castling,
     get_checks,
     get_game_info,
     get_piece_moves,
-    get_promorions,
+    get_promotions,
 )
 from src.features.opening import get_opening_features
 from src.features.players import get_player_ratings
@@ -17,76 +20,132 @@ from tqdm import tqdm
 
 def pgn_to_dataframe(
     pgn_file: str,
+    include_opening_cols: bool = True,
+    save_to_file: bool = True,
     save_interval: int = 100,
     save_location: str = "./data/interim/output.csv",
-    include_opening_cols: bool = True,
-):
+) -> Optional[pd.DataFrame]:
+    """
+    Converts a PGN file to a Pandas DataFrame with
+    an option to save intermittently to CSV.
+
+    Parameters:
+    pgn_file (str):
+        The file path of the PGN file to be converted.
+    save_interval (int):
+        The number of games processed before saving to CSV. Default is 100.
+    save_location (str):
+        The location to save the DataFrame as CSV. Default is "./../../output.csv".
+    include_opening_cols (bool):
+        Flag to determine whether to include opening features. Default is True.
+    save_to_file (bool):
+        Flag to control whether to write the DataFrame to a CSV file. Default is True.
+
+    Returns:
+    Optional[pd.DataFrame]: The resulting DataFrame if successful, None otherwise.
+    """
+
     games = []
+    start_game = 0
 
-    # Check if the save_location already has data and,
-    # if so, find out where we left off
+    # Check if save_location already has data and find out where we left off.
     if os.path.exists(save_location):
-        existing_df = pd.read_csv(save_location)
-        start_game = len(existing_df)
-    else:
-        start_game = 0
+        try:
+            existing_df = pd.read_csv(save_location)
+            start_game = len(existing_df)
+        except Exception as e:
+            print(f"Error reading existing DataFrame: {e}")
 
-    # Load PGN
-    pgn = open(pgn_file)
+    try:
+        with open(pgn_file) as pgn:
+            total_games = count_games_in_pgn(pgn_file)
+            remaining_games = total_games - start_game
+            progress_bar = tqdm(
+                iter(lambda: read_game(pgn), None),
+                total=remaining_games,
+                desc="Processing games",
+            )
 
-    # Estimate total games in the PGN file
-    total_games = count_games_in_pgn(pgn_file)
+            for game_idx, game in enumerate(progress_bar, start=start_game):
+                game_data = extract_game_data(game, include_opening_cols)
+                games.append(game_data)
 
-    # Skip games that are already processed (based on existing data in the CSV)
-    for _ in range(start_game):
-        _ = read_game(pgn)
+                if save_to_file and (
+                    (game_idx + 1) % save_interval == 0 or game_idx == total_games - 1
+                ):
+                    save_games_to_csv(games, save_location)
+                    games.clear()
+                    gc.collect()
 
-    # Define the generator for games
-    game_generator = iter(lambda: read_game(pgn), None)
+            final_df = (
+                pd.DataFrame(games) if not save_to_file else pd.read_csv(save_location)
+            )
+            return final_df
 
-    # Calculate the total number of games remaining to process
-    remaining_games = total_games - start_game
+    except Exception as e:
+        print(f"Error processing PGN file: {e}")
+        return None
 
-    # Set up the tqdm progress bar
-    progress_bar = tqdm(game_generator, total=remaining_games, desc="Processing games")
 
-    # Process games
-    for game_idx, game in enumerate(progress_bar, start=start_game):
-        # Extract info
-        player_ratings = get_player_ratings(game)
-        game_info = get_game_info(game)
-        piece_moves = get_piece_moves(game)
-        check_counts = get_checks(game)
-        capture_counts = get_captures(game)
-        promotion_counts = get_promorions(game)
-        castling_counts = get_castling(game)
+def extract_game_data(
+    game: Game, include_opening_cols: bool
+) -> Dict[str, Union[str, int, float]]:
+    """
+    Extracts relevant information from a chess game.
 
-        game_data = {
-            **player_ratings,
-            **game_info,
-            **piece_moves,
-            **check_counts,
-            **capture_counts,
-            **promotion_counts,
-            **castling_counts,
-        }
+    Parameters:
+    game (Game):
+        A chess game object.
+    include_opening_cols (bool):
+        Flag to determine whether to include opening features.
 
-        # Append opening features only if include_opening_features is True
-        if include_opening_cols:
-            opening_features = get_opening_features(game)
-            game_data = {**game_data, **opening_features}
+    Returns:
+    Dict[str, Union[str, int, float]]: A dictionary containing extracted game data.
+    """
 
-        games.append(game_data)
+    player_ratings = get_player_ratings(game)
+    game_info = get_game_info(game)
+    piece_moves = get_piece_moves(game)
+    check_counts = get_checks(game)
+    capture_counts = get_captures(game)
+    promotion_counts = get_promotions(game)
+    castling_counts = get_castling(game)
 
-        # Save to CSV every N games or if it's the last game
-        if (game_idx + 1) % save_interval == 0 or game_idx == total_games - 1:
-            temp_df = pd.DataFrame(games)
-            if os.path.exists(save_location):
-                temp_df.to_csv(save_location, mode="a", header=False, index=False)
-            else:
-                temp_df.to_csv(save_location, mode="w", header=True, index=False)
+    game_data = {
+        **player_ratings,
+        **game_info,
+        **piece_moves,
+        **check_counts,
+        **capture_counts,
+        **promotion_counts,
+        **castling_counts,
+    }
 
-            # Clear the games list to free up memory
-            games.clear()
+    if include_opening_cols:
+        opening_features = get_opening_features(game)
+        game_data = {**game_data, **opening_features}
 
-    return pd.read_csv(save_location)
+    return game_data
+
+
+def save_games_to_csv(
+    games: List[Dict[str, Union[str, int, float]]], save_location: str
+) -> None:
+    """
+    Saves a list of games to a CSV file.
+
+    Parameters:
+    games (List[Dict[str, Union[str, int, float]]]):
+        A list of games represented as dic.
+    save_location (str):
+        The location to save the CSV file.
+    """
+
+    temp_df = pd.DataFrame(games)
+    mode = "a" if os.path.exists(save_location) else "w"
+    header = not os.path.exists(save_location)
+
+    try:
+        temp_df.to_csv(save_location, mode=mode, header=header, index=False)
+    except Exception as e:
+        print(f"Error writing to CSV: {e}")
